@@ -188,9 +188,7 @@ jobs:
           VERSION_EXISTS: ${{ steps.guard.outputs.version_exists }}
         run: |
           TAGS="${IMAGE}:${VERSION}"
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PUBLISH_LATEST" = "true" ] && [ "$VERSION_EXISTS" = "true" ]; then
-            TAGS="${IMAGE}:latest"
-          elif [ "$EVENT_NAME" = "release" ] || [ "$PUBLISH_LATEST" = "true" ]; then
+          if [ "$VERSION_EXISTS" = "false" ] && { [ "$EVENT_NAME" = "release" ] || [ "$PUBLISH_LATEST" = "true" ]; }; then
             TAGS="${TAGS},${IMAGE}:latest"
           fi
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
@@ -200,6 +198,7 @@ jobs:
         run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push container image
+        if: steps.guard.outputs.version_exists == 'false'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -215,6 +214,16 @@ jobs:
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.revision=${{ steps.revision.outputs.sha }}
             org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Point latest at released image
+        if: steps.guard.outputs.version_exists == 'true' && (github.event_name == 'release' || github.event.inputs.publish_latest == 'true')
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          docker buildx imagetools create \
+            --tag "${IMAGE}:latest" \
+            "${IMAGE}:${VERSION}"
 
       - name: Summary
         env:
