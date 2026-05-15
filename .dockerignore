@@ -4,4 +4,8 @@ dist-server
 .git
 .github
 data
+.env
+.env.local
+.env.local.*
+.env.*.local
 *.log

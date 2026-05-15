@@ -3,6 +3,11 @@ name: cubecloud-agentos
 services:
   agentos:
     image: ${CUBECLOUD_AGENTOS_IMAGE:-ghcr.io/jzkk720/cubecloud-agentos}:${CUBECLOUD_AGENTOS_TAG:-latest}
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
     pull_policy: always
     platform: linux/amd64
     init: true
