@@ -17,14 +17,14 @@ on:
         required: true
         type: choice
         options:
-          - macos-arm64
-          - macos-x64
           - windows-x64
           - windows-arm64
+          - macos-arm64
+          - macos-x64
           - linux-x64
           - linux-arm64
           - all
-        default: 'macos-arm64'
+        default: 'windows-x64'
       skip_code_quality:
         description: 'Skip code quality checks (faster builds for debugging)'
         required: false
