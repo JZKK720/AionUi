@@ -48,6 +48,14 @@ export const AUTH_CONFIG = {
     USERNAME: 'admin' as const,
   },
 
+  // 首次启动引导配置（Bootstrap on first start）
+  BOOTSTRAP: {
+    // 从环境变量读取初始管理员用户名 / Initial admin username env var
+    INITIAL_ADMIN_USERNAME_ENV: 'AIONUI_INITIAL_ADMIN_USERNAME' as const,
+    // 从环境变量读取初始管理员密码 / Initial admin password env var
+    INITIAL_ADMIN_PASSWORD_ENV: 'AIONUI_INITIAL_ADMIN_PASSWORD' as const,
+  },
+
   // Cookie 配置（Cookie configuration）
   COOKIE: {
     // Cookie 名称（Cookie name）

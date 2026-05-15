@@ -25,6 +25,12 @@ import { generateQRLoginUrlDirect } from '@process/bridge/webuiQR';
 
 const DEFAULT_ADMIN_USERNAME = AUTH_CONFIG.DEFAULT_USER.USERNAME;
 
+type BootstrapAdminCredentials = {
+  username: string;
+  password: string | null;
+  fromEnvironment: boolean;
+};
+
 // 存储初始密码（内存中，用于首次显示）/ Store initial password (in memory, for first-time display)
 let initialAdminPassword: string | null = null;
 
@@ -130,6 +136,44 @@ function getServerIP(): string | null {
   return getLanIP();
 }
 
+function resolveBootstrapAdminCredentials(defaultUsername: string): BootstrapAdminCredentials {
+  const usernameEnvName = AUTH_CONFIG.BOOTSTRAP.INITIAL_ADMIN_USERNAME_ENV;
+  const passwordEnvName = AUTH_CONFIG.BOOTSTRAP.INITIAL_ADMIN_PASSWORD_ENV;
+  const configuredUsername = process.env[usernameEnvName]?.trim();
+  const configuredPassword = process.env[passwordEnvName]?.trim();
+
+  if (!configuredPassword) {
+    if (configuredUsername) {
+      throw new Error(`Missing ${passwordEnvName} for bootstrap admin credentials`);
+    }
+
+    return {
+      username: defaultUsername,
+      password: null,
+      fromEnvironment: false,
+    };
+  }
+
+  const username = configuredUsername || defaultUsername;
+  const usernameValidation = AuthService.validateUsername(username);
+  if (!usernameValidation.isValid) {
+    throw new Error(`Invalid ${usernameEnvName}: ${usernameValidation.errors.join('; ')}`);
+  }
+
+  const passwordValidation = AuthService.validatePasswordStrength(configuredPassword);
+  if (!passwordValidation.isValid) {
+    throw new Error(`Invalid ${passwordEnvName}: ${passwordValidation.errors.join('; ')}`);
+  }
+
+  console.log(`[WebUI] Bootstrapping initial admin credentials from ${passwordEnvName}`);
+
+  return {
+    username,
+    password: configuredPassword,
+    fromEnvironment: true,
+  };
+}
+
 /**
  * 初始化默认管理员账户（如果不存在）
  * Initialize default admin account if no users exist
@@ -141,28 +185,46 @@ async function initializeDefaultAdmin(): Promise<{
   password: string;
 } | null> {
   const username = DEFAULT_ADMIN_USERNAME;
+  const bootstrapCredentials = resolveBootstrapAdminCredentials(username);
 
   const systemUser = await UserRepository.getSystemUser();
   const existingAdmin = await UserRepository.findByUsername(username);
+  const configuredUser =
+    bootstrapCredentials.username === username
+      ? existingAdmin
+      : await UserRepository.findByUsername(bootstrapCredentials.username);
 
   const hasValidPassword = (user: typeof existingAdmin): boolean =>
     !!user && typeof user.password_hash === 'string' && user.password_hash.trim().length > 0;
 
-  if (hasValidPassword(systemUser) || hasValidPassword(existingAdmin)) {
+  if (
+    hasValidPassword(systemUser) ||
+    hasValidPassword(existingAdmin) ||
+    (configuredUser && configuredUser.id !== systemUser?.id && hasValidPassword(configuredUser))
+  ) {
     return null;
   }
 
-  const password = AuthService.generateRandomPassword();
+  const password = bootstrapCredentials.password ?? AuthService.generateRandomPassword();
 
   try {
     const hashedPassword = await AuthService.hashPassword(password);
 
     if (systemUser) {
-      const nextUsername =
-        systemUser.username && systemUser.username !== systemUser.id ? systemUser.username : username;
+      const nextUsername = bootstrapCredentials.fromEnvironment
+        ? bootstrapCredentials.username
+        : systemUser.username && systemUser.username !== systemUser.id
+          ? systemUser.username
+          : username;
       await UserRepository.setSystemUserCredentials(nextUsername, hashedPassword);
       initialAdminPassword = password; // 存储初始密码 / Store initial password
       return { username: nextUsername, password };
+    }
+
+    if (configuredUser) {
+      await UserRepository.updatePassword(configuredUser.id, hashedPassword);
+      initialAdminPassword = password; // 存储初始密码 / Store initial password
+      return { username: configuredUser.username, password };
     }
 
     if (existingAdmin) {
@@ -171,12 +233,17 @@ async function initializeDefaultAdmin(): Promise<{
       return { username, password };
     }
 
-    await UserRepository.createUser(username, hashedPassword);
+    await UserRepository.createUser(bootstrapCredentials.username, hashedPassword);
     initialAdminPassword = password; // 存储初始密码 / Store initial password
-    return { username, password };
+    return { username: bootstrapCredentials.username, password };
   } catch (error) {
     console.error('❌ Failed to initialize default admin account:', error);
     console.error('❌ 初始化默认管理员账户失败:', error);
+
+    if (bootstrapCredentials.fromEnvironment) {
+      throw error;
+    }
+
     return null;
   }
 }

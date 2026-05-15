@@ -28,6 +28,8 @@ const {
   initWebAdapterMock,
   generateRandomPasswordMock,
   hashPasswordMock,
+  validatePasswordStrengthMock,
+  validateUsernameMock,
   getSystemUserMock,
   findByUsernameMock,
   setSystemUserCredentialsMock,
@@ -60,6 +62,8 @@ const {
     initWebAdapterMock: vi.fn(),
     generateRandomPasswordMock: vi.fn(() => 'GeneratedPass123'),
     hashPasswordMock: vi.fn(async () => 'hashed-password'),
+    validatePasswordStrengthMock: vi.fn(() => ({ isValid: true, errors: [] })),
+    validateUsernameMock: vi.fn(() => ({ isValid: true, errors: [] })),
     getSystemUserMock: vi.fn(),
     findByUsernameMock: vi.fn(),
     setSystemUserCredentialsMock: vi.fn(async () => {}),
@@ -112,6 +116,8 @@ vi.mock('@process/webserver/auth/service/AuthService', () => ({
   AuthService: {
     generateRandomPassword: generateRandomPasswordMock,
     hashPassword: hashPasswordMock,
+    validatePasswordStrength: validatePasswordStrengthMock,
+    validateUsername: validateUsernameMock,
   },
 }));
 
@@ -142,6 +148,8 @@ describe('startWebServerWithInstance default admin initialization', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    delete process.env.AIONUI_INITIAL_ADMIN_USERNAME;
+    delete process.env.AIONUI_INITIAL_ADMIN_PASSWORD;
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -244,5 +252,43 @@ describe('startWebServerWithInstance default admin initialization', () => {
     expect(setSystemUserCredentialsMock).not.toHaveBeenCalled();
     expect(updatePasswordMock).toHaveBeenCalledWith('legacy-admin', 'hashed-password');
     expect(createUserMock).not.toHaveBeenCalled();
+  });
+
+  it('uses bootstrap env credentials for first-start admin seeding', async () => {
+    process.env.AIONUI_INITIAL_ADMIN_USERNAME = 'gatewayadmin';
+    process.env.AIONUI_INITIAL_ADMIN_PASSWORD = 'BootstrapPass123!';
+
+    getSystemUserMock.mockResolvedValue(makeUser());
+    findByUsernameMock.mockResolvedValue(null);
+
+    const { startWebServerWithInstance } = await import('@process/webserver/index');
+
+    await startWebServerWithInstance(3000, false);
+
+    expect(generateRandomPasswordMock).not.toHaveBeenCalled();
+    expect(validateUsernameMock).toHaveBeenCalledWith('gatewayadmin');
+    expect(validatePasswordStrengthMock).toHaveBeenCalledWith('BootstrapPass123!');
+    expect(hashPasswordMock).toHaveBeenCalledWith('BootstrapPass123!');
+    expect(setSystemUserCredentialsMock).toHaveBeenCalledWith('gatewayadmin', 'hashed-password');
+  });
+
+  it('rejects invalid bootstrap password configuration', async () => {
+    process.env.AIONUI_INITIAL_ADMIN_PASSWORD = 'short';
+    validatePasswordStrengthMock.mockReturnValue({
+      isValid: false,
+      errors: ['PASSWORD_TOO_SHORT'],
+    });
+
+    getSystemUserMock.mockResolvedValue(makeUser());
+    findByUsernameMock.mockResolvedValue(null);
+
+    const { startWebServerWithInstance } = await import('@process/webserver/index');
+
+    await expect(startWebServerWithInstance(3000, false)).rejects.toThrow(
+      'Invalid AIONUI_INITIAL_ADMIN_PASSWORD: PASSWORD_TOO_SHORT'
+    );
+
+    expect(hashPasswordMock).not.toHaveBeenCalled();
+    expect(setSystemUserCredentialsMock).not.toHaveBeenCalled();
   });
 });
