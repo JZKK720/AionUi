@@ -27,6 +27,11 @@ on:
         description: 'Existing release tag to redistribute (e.g. v1.9.21)'
         required: true
         type: string
+      publish_latest:
+        description: 'Also update the floating latest GHCR tag during manual dispatch'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   id-token: write # required for OIDC token
@@ -155,14 +160,23 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Guard against same-version overwrite
+        id: guard
         env:
           IMAGE: ${{ steps.image.outputs.image }}
           VERSION: ${{ steps.version.outputs.version }}
+          EVENT_NAME: ${{ github.event_name }}
+          PUBLISH_LATEST: ${{ github.event.inputs.publish_latest }}
         run: |
           if docker buildx imagetools inspect "${IMAGE}:${VERSION}" >/dev/null 2>&1; then
+            echo "version_exists=true" >> $GITHUB_OUTPUT
+            if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PUBLISH_LATEST" = "true" ]; then
+              echo "Container tag ${IMAGE}:${VERSION} already exists. Reusing it and updating latest only."
+              exit 0
+            fi
             echo "::error::Container tag ${IMAGE}:${VERSION} already exists. Refusing to overwrite."
             exit 1
           fi
+          echo "version_exists=false" >> $GITHUB_OUTPUT
 
       - name: Resolve container tags
         id: tags
@@ -170,9 +184,13 @@ jobs:
           IMAGE: ${{ steps.image.outputs.image }}
           VERSION: ${{ steps.version.outputs.version }}
           EVENT_NAME: ${{ github.event_name }}
+          PUBLISH_LATEST: ${{ github.event.inputs.publish_latest }}
+          VERSION_EXISTS: ${{ steps.guard.outputs.version_exists }}
         run: |
           TAGS="${IMAGE}:${VERSION}"
-          if [ "$EVENT_NAME" = "release" ]; then
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$PUBLISH_LATEST" = "true" ] && [ "$VERSION_EXISTS" = "true" ]; then
+            TAGS="${IMAGE}:latest"
+          elif [ "$EVENT_NAME" = "release" ] || [ "$PUBLISH_LATEST" = "true" ]; then
             TAGS="${TAGS},${IMAGE}:latest"
           fi
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
@@ -203,12 +221,13 @@ jobs:
           IMAGE: ${{ steps.image.outputs.image }}
           VERSION: ${{ steps.version.outputs.version }}
           EVENT_NAME: ${{ github.event_name }}
+          PUBLISH_LATEST: ${{ github.event.inputs.publish_latest }}
         run: |
           {
             echo "### GHCR image published"
             echo ""
             echo "- Image: \`${IMAGE}:${VERSION}\`"
-            if [ "$EVENT_NAME" = "release" ]; then
+            if [ "$EVENT_NAME" = "release" ] || [ "$PUBLISH_LATEST" = "true" ]; then
               echo "- Floating tag: \`${IMAGE}:latest\`"
             fi
           } >> $GITHUB_STEP_SUMMARY
