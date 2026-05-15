@@ -9,6 +9,7 @@ permissions:
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 env:
   BUN_INSTALL_REGISTRY: 'https://registry.npmjs.org/'
