@@ -75,6 +75,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: code-quality
     if: ${{ always() && (inputs.skip_code_quality || needs.code-quality.result == 'success') }}
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
 
     outputs:
       commit-short: ${{ steps.commit.outputs.short }}
