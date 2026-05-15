@@ -671,6 +671,32 @@ npm run resetpass
 npm run resetpass -- username
 ```
 
+### Operations Note (v1.9.26+)
+
+For compose-based cubecloud AgentOS deployments, `compose.yaml` automatically loads optional local-only env files from `.env` and `.env.local` before starting the container.
+
+If you want to seed the first WebUI admin account on a fresh data store, add these keys to `.env.local`:
+
+```env
+AIONUI_INITIAL_ADMIN_USERNAME=your-admin-name
+AIONUI_INITIAL_ADMIN_PASSWORD=your-strong-password
+```
+
+Operational behavior:
+
+- The bootstrap credentials are only used on first start, or when the persisted store does not already contain a valid admin password hash.
+- Existing persisted credentials in `DATA_DIR` are not overwritten. If `./data` already contains a working login, use `--resetpass` instead of expecting bootstrap env vars to replace it.
+- In the default compose deployment, credentials persist because the container stores data under `./data:/data`.
+
+For fork container updates, the published version tag and the floating `latest` tag in `ghcr.io/jzkk720/cubecloud-agentos` are aligned to the latest published fork release. Update an existing deployment with:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+If you need a deterministic rollout instead of the floating channel, set `CUBECLOUD_AGENTOS_TAG` to a published release such as `1.9.26` before running compose.
+
 ---
 
 ## Additional Resources
