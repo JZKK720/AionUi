@@ -1,7 +1,7 @@
 {
-  "name": "AionUi",
-  "short_name": "AionUi",
-  "description": "AionUi WebUI for mobile and desktop browsers.",
+  "name": "cubecloud AgentOS",
+  "short_name": "cubecloud",
+  "description": "cubecloud 智方云 AgentOS distribution powered by AionUi for local AI-first APIs and applications.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

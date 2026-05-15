@@ -31,6 +31,7 @@ on:
 permissions:
   id-token: write # required for OIDC token
   contents: read
+  packages: write
 
 jobs:
   distribute:
@@ -109,4 +110,105 @@ jobs:
             echo ""
             echo "- Tag: \`${TAG}\`"
             echo "- Version: \`${VERSION}\`"
+          } >> $GITHUB_STEP_SUMMARY
+
+  publish-container:
+    name: Publish GHCR image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
+    steps:
+      - name: Extract version from tag
+        id: version
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [ -z "$TAG" ]; then
+            echo "::error::No tag provided (event did not supply one)."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG / Version: $VERSION"
+
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.version.outputs.tag }}
+
+      - name: Resolve image coordinates
+        id: image
+        run: |
+          OWNER=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${OWNER}/cubecloud-agentos" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Guard against same-version overwrite
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if docker buildx imagetools inspect "${IMAGE}:${VERSION}" >/dev/null 2>&1; then
+            echo "::error::Container tag ${IMAGE}:${VERSION} already exists. Refusing to overwrite."
+            exit 1
+          fi
+
+      - name: Resolve container tags
+        id: tags
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          VERSION: ${{ steps.version.outputs.version }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          TAGS="${IMAGE}:${VERSION}"
+          if [ "$EVENT_NAME" = "release" ]; then
+            TAGS="${TAGS},${IMAGE}:latest"
+          fi
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Capture release revision
+        id: revision
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=cubecloud AgentOS
+            org.opencontainers.image.description=cubecloud 智方云 AgentOS standalone server image powered by AionUi
+            org.opencontainers.image.vendor=cubecloud
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.revision.outputs.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Summary
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+          VERSION: ${{ steps.version.outputs.version }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          {
+            echo "### GHCR image published"
+            echo ""
+            echo "- Image: \`${IMAGE}:${VERSION}\`"
+            if [ "$EVENT_NAME" = "release" ]; then
+              echo "- Floating tag: \`${IMAGE}:latest\`"
+            fi
           } >> $GITHUB_STEP_SUMMARY

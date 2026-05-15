@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# AionUi — Ubuntu / Debian 一鍵自動化安裝腳本
+# cubecloud AgentOS — Ubuntu / Debian 一鍵自動化安裝腳本
 # ============================================================================
 # 功能：
 #   1. 自動偵測系統架構 (amd64 / arm64)
@@ -12,7 +12,7 @@
 #   7. (可選) 建立桌面捷徑
 #
 # 用法：
-#   curl -fsSL https://raw.githubusercontent.com/iOfficeAI/AionUi/main/scripts/install-ubuntu.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/JZKK720/AionUi/main/scripts/install-ubuntu.sh | bash
 #   # 或指定版本：
 #   AIONUI_VERSION=1.8.25 bash install-ubuntu.sh
 #   # 僅安裝桌面版（跳過 headless 設定）：
@@ -30,6 +30,10 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+RELEASE_REPO="${AIONUI_RELEASE_REPO:-JZKK720/AionUi}"
+RELEASE_WEB_BASE="https://github.com/${RELEASE_REPO}"
+RELEASE_API_BASE="https://api.github.com/repos/${RELEASE_REPO}"
+
 # ─── 輔助函式 ───────────────────────────────────────────────────────────────
 info()    { echo -e "${BLUE}[INFO]${NC} $*"; }
 success() { echo -e "${GREEN}[✓]${NC} $*"; }
@@ -40,7 +44,7 @@ die()     { error "$*"; exit 1; }
 banner() {
     echo -e "${CYAN}${BOLD}"
     echo "  ╔══════════════════════════════════════════════╗"
-    echo "  ║          AionUi Installer for Ubuntu         ║"
+    echo "  ║     cubecloud AgentOS Installer for Ubuntu  ║"
     echo "  ╚══════════════════════════════════════════════╝"
     echo -e "${NC}"
 }
@@ -93,10 +97,10 @@ resolve_version() {
         info "正在查詢最新版本..."
         # 透過 GitHub API 取得 latest release tag
         if command -v curl &>/dev/null; then
-            VERSION=$(curl -fsSL "https://api.github.com/repos/iOfficeAI/AionUi/releases/latest" \
+            VERSION=$(curl -fsSL "${RELEASE_API_BASE}/releases/latest" \
                 | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/')
         elif command -v wget &>/dev/null; then
-            VERSION=$(wget -qO- "https://api.github.com/repos/iOfficeAI/AionUi/releases/latest" \
+            VERSION=$(wget -qO- "${RELEASE_API_BASE}/releases/latest" \
                 | grep '"tag_name"' | head -1 | sed 's/.*"v\([^"]*\)".*/\1/')
         else
             die "需要 curl 或 wget 來下載，請先安裝: sudo apt-get install -y curl"
@@ -109,7 +113,7 @@ resolve_version() {
     fi
 
     DEB_FILENAME="AionUi-${VERSION}-linux-${DEB_ARCH}.deb"
-    DOWNLOAD_URL="https://github.com/iOfficeAI/AionUi/releases/download/v${VERSION}/${DEB_FILENAME}"
+    DOWNLOAD_URL="${RELEASE_WEB_BASE}/releases/download/v${VERSION}/${DEB_FILENAME}"
 }
 
 # ─── 下載 .deb 套件 ──────────────────────────────────────────────────────────
@@ -300,7 +304,7 @@ create_systemd_service() {
     $SUDO tee "$service_path" > /dev/null << 'SERVICE_EOF'
 [Unit]
 Description=AionUi AI Agent Desktop App (WebUI Mode)
-Documentation=https://github.com/iOfficeAI/AionUi
+Documentation=https://github.com/JZKK720/AionUi
 After=network-online.target
 Wants=network-online.target
 
@@ -392,8 +396,8 @@ print_summary() {
         echo ""
     fi
 
-    echo -e "  ${BOLD}📖 文件:${NC}  https://github.com/iOfficeAI/AionUi"
-    echo -e "  ${BOLD}🐛 回報:${NC}  https://github.com/iOfficeAI/AionUi/issues"
+    echo -e "  ${BOLD}📖 文件:${NC}  ${RELEASE_WEB_BASE}"
+    echo -e "  ${BOLD}🐛 回報:${NC}  ${RELEASE_WEB_BASE}/issues"
     echo ""
 
     if [[ "${MODE}" == "headless" ]]; then

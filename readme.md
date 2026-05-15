@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="./resources/aionui-banner-1.png" alt="AionUi - Cowork with AI Agents" width="100%">
+  <img src="./resources/branding/cubecloud/Logo.png/1290X480 常规.png" alt="cubecloud 智方云 AgentOS - powered by AionUi" width="100%">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/iOfficeAI/AionUi?style=flat-square&color=32CD32" alt="Version">
+  <img src="https://img.shields.io/github/v/release/JZKK720/AionUi?style=flat-square&color=32CD32" alt="Version">
   &nbsp;
   <img src="https://img.shields.io/badge/license-Apache--2.0-32CD32?style=flat-square&logo=apache&logoColor=white" alt="License">
   &nbsp;
@@ -19,12 +19,20 @@
 ---
 
 <p align="center">
-  <strong>A free, open-source, Cowork app with AI Agents</strong><br>
-  <em>Built-in Agent | Zero Setup | Any API Key | Multi-Agents | Remote Access | Cross-Platform | 24/7 Automation</em>
+  <strong>cubecloud 智方云 AgentOS distribution, powered by AionUi</strong><br>
+  <em>Local AI-first APIs and applications | Built-in agent runtime | Remote access | Cross-platform deployment</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <sub>Fork note: Upstream AionUi source code and Apache-2.0 licensing remain intact. cubecloud / 智方云 branding assets and distribution overlays are Copyright © 2026 cubecloud.</sub>
+</p>
+
+<p align="center">
+  <sub>Distribution channels: <a href="https://github.com/JZKK720/AionUi/releases">fork GitHub Releases</a> · <a href="https://github.com/JZKK720/AionUi/pkgs/container/cubecloud-agentos">fork GHCR image</a> · <a href="https://github.com/iOfficeAI/AionUi">upstream source</a></sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/⬇️%20Download%20Now-Latest%20Release-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release" height="50">
   </a>
 </p>
@@ -66,7 +74,7 @@
 | Price                           | Free / Paid                 | **Free & Open Source**                                                                                                        |
 
 <p align="center">
-  <img src="./resources/offica-ai BANNER-function.png" alt="AionUi Cowork Platform" width="800">
+  <img src="./resources/branding/cubecloud/Logo.png/1290X480 反黑.png" alt="cubecloud AgentOS platform overview" width="800">
 </p>
 
 ---
@@ -80,8 +88,10 @@ AionUi ships with a complete AI agent engine. Unlike tools that require you to i
 - **Full agent capabilities** — file read/write, web search, image generation, MCP (Model Context Protocol) tools
 - **Ready-to-use assistants** — 20 built-in professional assistants (Cowork, PPT Creator, Word Creator, Excel Creator, Morph PPT 3D, Pitch Deck Creator, Dashboard Creator, Academic Paper Writer, Financial Model Creator, and more) ready to use immediately
 
+_Current product screenshots may still show upstream AionUi naming while cubecloud AgentOS UI branding is being rolled out across the application._
+
 <p align="center">
-  <img src="./resources/homepage.png" alt="Built-in Agents" width="800">
+  <img src="./resources/homepage.png" alt="cubecloud AgentOS built-in agents" width="800">
 </p>
 
 ### **Office assistants — PPT, Word & Excel**
@@ -615,17 +625,22 @@ A: All data is stored locally in a SQLite database. Nothing is uploaded to any s
 ### Install
 
 <p>
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release" height="50">
   </a>
 </p>
 
-Click the button above to go to the Releases page and download the installer for your platform (macOS / Windows / Linux).
+Click the button above to go to the fork Releases page and download the installer for your platform (macOS / Windows / Linux).
 
 ```bash
-# Alternatively, macOS via Homebrew
-brew install aionui
+# Ubuntu / Debian installer script
+curl -fsSL https://raw.githubusercontent.com/JZKK720/AionUi/main/scripts/install-ubuntu.sh | bash
+
+# Standalone server container
+docker pull ghcr.io/jzkk720/cubecloud-agentos:latest
 ```
+
+Homebrew still follows the upstream `aionui` cask today, so use fork GitHub Releases or GHCR for the cubecloud-branded distribution.
 
 ### Get Started in 3 Steps
 
@@ -674,9 +689,10 @@ brew install aionui
   </a>
 </p>
 
-- [GitHub Discussions](https://github.com/iOfficeAI/AionUi/discussions) — share ideas and exchange tips
-- [Report Issues](https://github.com/iOfficeAI/AionUi/issues) — bugs and feature requests
-- [Release Updates](https://github.com/iOfficeAI/AionUi/releases) — get the latest version
+- [GitHub Discussions](https://github.com/JZKK720/AionUi/discussions) — share ideas and exchange tips for the fork distribution
+- [Report Issues](https://github.com/JZKK720/AionUi/issues) — bugs and feature requests for cubecloud AgentOS
+- [Release Updates](https://github.com/JZKK720/AionUi/releases) — get the latest fork build
+- [Upstream Source & Wiki](https://github.com/iOfficeAI/AionUi) — upstream code lineage and AionUi documentation
 - [Discord Community](https://discord.gg/2QAwJn7Egx) — English community
 - [WeChat Group](./resources/wx-9.png) — Chinese community
 
@@ -706,6 +722,8 @@ bun run test       # run unit tests
 
 This project is licensed under [Apache-2.0](LICENSE).
 
+Upstream AionUi source code attribution remains intact. cubecloud / 智方云 branding assets and fork-specific distribution overlays are Copyright © 2026 cubecloud.
+
 ---
 
 ## Contributors
@@ -728,7 +746,7 @@ This project is licensed under [Apache-2.0](LICENSE).
 
 **If you like it, give us a star**
 
-[Report Bug](https://github.com/iOfficeAI/AionUi/issues) · [Request Feature](https://github.com/iOfficeAI/AionUi/issues)
+[Report Bug](https://github.com/JZKK720/AionUi/issues) · [Request Feature](https://github.com/JZKK720/AionUi/issues)
 
 </div>
 

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/iOfficeAI/AionUi?style=flat-square&color=32CD32" alt="Version">
+  <img src="https://img.shields.io/github/v/release/JZKK720/AionUi?style=flat-square&color=32CD32" alt="Version">
   &nbsp;
   <img src="https://img.shields.io/badge/license-Apache--2.0-32CD32?style=flat-square&logo=apache&logoColor=white" alt="License">
   &nbsp;
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/⬇️%20Download%20Now-Latest%20Release-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release" height="50">
   </a>
 </p>
@@ -607,7 +607,7 @@ AionUi — это **бесплатный мультиагентный рабоч
 ### Установка
 
 <p>
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release" height="50">
   </a>
 </p>
@@ -666,9 +666,9 @@ brew install aionui
   </a>
 </p>
 
-- [GitHub Discussions](https://github.com/iOfficeAI/AionUi/discussions) — делитесь идеями и обменивайтесь советами
-- [Сообщить о проблемах](https://github.com/iOfficeAI/AionUi/issues) — ошибки и запросы функций
-- [Обновления релизов](https://github.com/iOfficeAI/AionUi/releases) — получите последнюю версию
+- [GitHub Discussions](https://github.com/JZKK720/AionUi/discussions) — делитесь идеями и обменивайтесь советами
+- [Сообщить о проблемах](https://github.com/JZKK720/AionUi/issues) — ошибки и запросы функций
+- [Обновления релизов](https://github.com/JZKK720/AionUi/releases) — получите последнюю версию
 - [Сообщество Discord](https://discord.gg/2QAwJn7Egx) — англоязычное сообщество
 - [Группа WeChat](./resources/wx-9.png) — русскоязычное сообщество
 
@@ -718,6 +718,6 @@ bun run test       # запустить юнит-тесты
 
 **Если нравится, поставьте нам звезду**
 
-[Сообщить об ошибке](https://github.com/iOfficeAI/AionUi/issues) · [Запросить функцию](https://github.com/iOfficeAI/AionUi/issues)
+[Сообщить об ошибке](https://github.com/JZKK720/AionUi/issues) · [Запросить функцию](https://github.com/JZKK720/AionUi/issues)
 
 </div>

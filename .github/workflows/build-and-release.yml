@@ -8,9 +8,7 @@ permissions:
 
 on:
   push:
-    branches: [dev]
-    tags:
-      - '*'
+    branches: [main]
 
 env:
   BUN_INSTALL_REGISTRY: 'https://registry.npmjs.org/'
@@ -19,8 +17,8 @@ jobs:
   build-pipeline:
     name: Build Pipeline
     uses: ./.github/workflows/_build-reusable.yml
-    # dev 分支或正式 tag 触发构建（排除 -dev- tag，避免重复构建）
-    if: github.ref == 'refs/heads/dev' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-'))
+    # main 分支负责 fork 的正式构建与发布
+    if: github.ref == 'refs/heads/main'
     with:
       matrix: >-
         {"include":[
@@ -89,15 +87,14 @@ jobs:
             exit 1
           fi
 
-  # 自动创建tag（仅 dev 分支推送时）
+  # 自动创建正式 tag（仅 main 分支推送时）
   create-tag:
-    name: Create Tag from Branch
+    name: Create Tag from Main
     runs-on: ubuntu-latest
     needs: [build-pipeline]
-    if: success() && github.ref == 'refs/heads/dev'
+    if: success() && github.ref == 'refs/heads/main'
     outputs:
       tag_name: ${{ steps.create_tag.outputs.tag_name }}
-      is_dev: ${{ steps.create_tag.outputs.is_dev }}
 
     steps:
       - name: Checkout code
@@ -119,65 +116,45 @@ jobs:
         id: create_tag
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          COMMIT_SHORT=$(git rev-parse --short HEAD)
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
 
-          # 根据分支确定 tag 格式
-          if [ "$BRANCH_NAME" = "dev" ]; then
-            TAG_NAME="v${VERSION}-dev-${COMMIT_SHORT}"
-            IS_DEV="true"
-            echo "🔧 Development release: $TAG_NAME"
-          else
-            TAG_NAME="v$VERSION"
-            IS_DEV="false"
-            echo "🚀 Production release: $TAG_NAME"
-          fi
+          TAG_NAME="v$VERSION"
+          echo "🚀 Main release: $TAG_NAME"
 
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "is_dev=$IS_DEV" >> $GITHUB_OUTPUT
 
           # 检查远程tag是否已存在
           if git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME$"; then
-            if [ "$IS_DEV" = "false" ]; then
-              # Main 分支：需要递增版本并修改 package.json
-              echo "⚠️ Tag $TAG_NAME already exists, auto-incrementing version..."
+            echo "⚠️ Tag $TAG_NAME already exists, auto-incrementing version..."
 
-              if [[ $VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-                MAJOR=${BASH_REMATCH[1]}
-                MINOR=${BASH_REMATCH[2]}
-                PATCH=${BASH_REMATCH[3]}
-                NEW_PATCH=$((PATCH + 1))
-                NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+            if [[ $VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              MAJOR=${BASH_REMATCH[1]}
+              MINOR=${BASH_REMATCH[2]}
+              PATCH=${BASH_REMATCH[3]}
+              NEW_PATCH=$((PATCH + 1))
+              NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
 
-                echo "📝 Updating package.json version to $NEW_VERSION"
+              echo "📝 Updating package.json version to $NEW_VERSION"
 
-                # 更新 package.json 版本号
-                bun pm version $NEW_VERSION
+              # 更新 package.json 版本号
+              bun pm version $NEW_VERSION
 
-                # 配置git用户信息
-                git config user.name "github-actions[bot]"
-                git config user.email "github-actions[bot]@users.noreply.github.com"
+              # 配置git用户信息
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
 
-                # 提交版本更新
-                git add package.json bun.lock
-                git commit -m "chore: bump version to $NEW_VERSION"
-                git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
-                git push origin $BRANCH_NAME
+              # 提交版本更新
+              git add package.json bun.lock
+              git commit -m "chore: bump version to $NEW_VERSION"
+              git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
+              git push origin $BRANCH_NAME
 
-                # 获取新的 commit ID
-                COMMIT_SHORT=$(git rev-parse --short HEAD)
-                TAG_NAME="v${NEW_VERSION}-${COMMIT_SHORT}"
+              TAG_NAME="v${NEW_VERSION}"
 
-                echo "🚀 New tag with updated version: $TAG_NAME"
-                echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-              else
-                TAG_NAME="v${VERSION}-${COMMIT_SHORT}"
-                echo "⚠️ Fallback: creating tag with commit ID: $TAG_NAME"
-                echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-              fi
+              echo "🚀 New tag after version bump: $TAG_NAME"
+              echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
             else
-              # Dev 分支 tag 已存在则失败（不应该发生）
-              echo "⚠️ Dev tag $TAG_NAME already exists, this shouldn't happen"
+              echo "::error::Expected a stable semver version in package.json, got $VERSION"
               exit 1
             fi
           fi
@@ -200,10 +177,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     needs: [build-pipeline, create-tag]
-    # Tag 推送时 create-tag 会被跳过，所以需要检查两种情况（排除 -dev- tag 避免重复）
-    if: always() && needs.build-pipeline.result == 'success' && (needs.create-tag.result == 'success' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-')))
-    # dev 分支使用 dev-release 环境，正式 tag 使用 release 环境
-    environment: ${{ needs.create-tag.outputs.is_dev == 'true' && 'dev-release' || 'release' }}
+    if: needs.build-pipeline.result == 'success' && needs.create-tag.result == 'success'
 
     steps:
       - name: Checkout code
@@ -212,21 +186,10 @@ jobs:
       - name: Get version for release
         id: version
         run: |
-          # 判断触发来源：正式 tag 推送 or dev 分支
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            # 正式 Tag 推送触发（-dev- tag 已被排除，不会到达这里）
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
-            IS_DEV="false"
-            echo "🚀 Creating stable release from tag: $TAG_NAME"
-          else
-            # dev 分支触发，使用 create-tag job 的输出
-            TAG_NAME="${{ needs.create-tag.outputs.tag_name }}"
-            IS_DEV="${{ needs.create-tag.outputs.is_dev }}"
-            echo "🔧 Creating development release: $TAG_NAME"
-          fi
+          TAG_NAME="${{ needs.create-tag.outputs.tag_name }}"
+          echo "🚀 Creating release from main: $TAG_NAME"
 
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "is_dev=$IS_DEV" >> $GITHUB_OUTPUT
 
       - name: Download all build artifacts
         uses: actions/download-artifact@v7
@@ -241,7 +204,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag_name }}
-          name: ${{ steps.version.outputs.is_dev == 'true' && format('Development Build {0}', steps.version.outputs.tag_name) || steps.version.outputs.tag_name }}
+          name: ${{ steps.version.outputs.tag_name }}
           files: |
             release-assets/**/*.exe
             release-assets/**/*.msi
@@ -251,6 +214,6 @@ jobs:
             release-assets/**/*.yml
           generate_release_notes: true
           draft: true
-          prerelease: ${{ steps.version.outputs.is_dev == 'true' || contains(steps.version.outputs.tag_name, 'beta') || contains(steps.version.outputs.tag_name, 'alpha') || contains(steps.version.outputs.tag_name, 'rc') }}
+          prerelease: ${{ contains(steps.version.outputs.tag_name, 'beta') || contains(steps.version.outputs.tag_name, 'alpha') || contains(steps.version.outputs.tag_name, 'rc') }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

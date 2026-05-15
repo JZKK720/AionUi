@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/iOfficeAI/AionUi?style=flat-square&color=32CD32" alt="Version">
+  <img src="https://img.shields.io/github/v/release/JZKK720/AionUi?style=flat-square&color=32CD32" alt="Version">
   &nbsp;
   <img src="https://img.shields.io/badge/license-Apache--2.0-32CD32?style=flat-square&logo=apache&logoColor=white" alt="License">
   &nbsp;
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/⬇️%20Baixar%20agora-Última%20versão-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Baixar a última versão" height="50">
   </a>
 </p>
@@ -554,7 +554,7 @@ R: Todos os dados são armazenados localmente em um banco de dados SQLite. Nada 
 ### Instalar
 
 <p>
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/Baixar-Última%20versão-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Baixar a última versão" height="50">
   </a>
 </p>
@@ -613,9 +613,9 @@ brew install aionui
   </a>
 </p>
 
-- [GitHub Discussions](https://github.com/iOfficeAI/AionUi/discussions) — compartilhe ideias e troque dicas
-- [Reportar problemas](https://github.com/iOfficeAI/AionUi/issues) — bugs e solicitações de recursos
-- [Atualizações de lançamento](https://github.com/iOfficeAI/AionUi/releases) — obtenha a última versão
+- [GitHub Discussions](https://github.com/JZKK720/AionUi/discussions) — compartilhe ideias e troque dicas
+- [Reportar problemas](https://github.com/JZKK720/AionUi/issues) — bugs e solicitações de recursos
+- [Atualizações de lançamento](https://github.com/JZKK720/AionUi/releases) — obtenha a última versão
 - [Comunidade Discord](https://discord.gg/2QAwJn7Egx) — comunidade em inglês
 - [Grupo WeChat](../../resources/wx-9.png) — comunidade chinesa
 
@@ -667,6 +667,6 @@ Este projeto está licenciado sob [Apache-2.0](../../LICENSE).
 
 **Se você gostou, nos dê uma estrela**
 
-[Reportar bug](https://github.com/iOfficeAI/AionUi/issues) · [Solicitar recurso](https://github.com/iOfficeAI/AionUi/issues)
+[Reportar bug](https://github.com/JZKK720/AionUi/issues) · [Solicitar recurso](https://github.com/JZKK720/AionUi/issues)
 
 </div>

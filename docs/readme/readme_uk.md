@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/v/release/iOfficeAI/AionUi?style=flat-square&color=32CD32" alt="Версія">
+  <img src="https://img.shields.io/github/v/release/JZKK720/AionUi?style=flat-square&color=32CD32" alt="Версія">
   &nbsp;
   <img src="https://img.shields.io/badge/license-Apache--2.0-32CD32?style=flat-square&logo=apache&logoColor=white" alt="Ліцензія">
   &nbsp;
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/⬇️%20Завантажити-Останній%20реліз-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Завантажити останній реліз" height="50">
   </a>
 </p>
@@ -362,7 +362,7 @@ AionUi — це **безкоштовний Multi-AI Agent десктоп**. На
 ### Встановлення
 
 <p>
-  <a href="https://github.com/iOfficeAI/AionUi/releases">
+  <a href="https://github.com/JZKK720/AionUi/releases">
     <img src="https://img.shields.io/badge/Завантажити-Останній%20реліз-32CD32?style=for-the-badge&logo=github&logoColor=white" alt="Завантажити останній реліз" height="50">
   </a>
 </p>
@@ -392,8 +392,8 @@ brew install aionui
   </a>
 </p>
 
-- [GitHub Discussions](https://github.com/iOfficeAI/AionUi/discussions) — діліться ідеями
-- [Повідомити про проблему](https://github.com/iOfficeAI/AionUi/issues) — баги та запити функцій
+- [GitHub Discussions](https://github.com/JZKK720/AionUi/discussions) — діліться ідеями
+- [Повідомити про проблему](https://github.com/JZKK720/AionUi/issues) — баги та запити функцій
 - [Discord](https://discord.gg/2QAwJn7Egx) — англомовна спільнота
 
 ### Внесок у проект

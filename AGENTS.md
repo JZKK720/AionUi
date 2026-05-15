@@ -102,6 +102,18 @@ Commit format: `<type>(<scope>): <subject>` in English. Types: feat, fix, refact
 
 For pull request creation, see the `oss-pr` skill (`.claude/skills/oss-pr/SKILL.md`).
 
+## Fork Maintenance
+
+This repo may also be used as the source base for cubecloud / 智方云 rebranding and distribution work.
+
+- Preserve the current Apache-2.0 legal surface when doing branding work: keep [LICENSE](LICENSE), existing `SPDX-License-Identifier: Apache-2.0` headers, and upstream attribution unless the user explicitly asks for a licensing change.
+- Prefer fork overlays over broad string replacement. Keep owner, registry, download URL, and brand overrides concentrated in a small number of config or workflow files so upstream merges stay practical.
+- Treat upstream sync and fork publishing as separate concerns: keep upstream references intact for merge and import flows, and add cubecloud-specific release or GHCR outputs explicitly.
+- If work touches release pipelines, Docker images, installer/update endpoints, or repo branding, load [.github/instructions/cubecloud-fork.instructions.md](.github/instructions/cubecloud-fork.instructions.md) first.
+- Use [.github/instructions/branding-assets.instructions.md](.github/instructions/branding-assets.instructions.md) when wiring cubecloud logos, icons, banners, app identity artwork, or README visuals.
+- Use [.github/skills/fork-sync/SKILL.md](.github/skills/fork-sync/SKILL.md) for remote verification, ahead/behind analysis, and choosing a safe upstream sync path before merging fork updates.
+- Use [.github/instructions/release-channel.instructions.md](.github/instructions/release-channel.instructions.md) when editing release workflows, installer download sources, updater endpoints, or future cubecloud GHCR publishing.
+
 ## Skills Index
 
 Detailed rules and guidelines are organized into Skills for better modularity:

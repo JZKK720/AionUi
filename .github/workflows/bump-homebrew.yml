@@ -3,6 +3,8 @@ name: Verify Homebrew Cask
 # The aionui cask is on Homebrew's autobump list — BrewTestBot automatically
 # creates version-bump PRs every ~3 hours. This workflow only *verifies* that
 # the cask has been updated, it no longer submits bump PRs itself.
+# Fork note: cubecloud AgentOS currently distributes via fork GitHub Releases
+# and GHCR. Keep this verification upstream-only until a separate fork cask exists.
 
 on:
   # Daily check at 08:00 UTC
@@ -22,6 +24,7 @@ jobs:
   verify-cask:
     name: Verify Homebrew Cask
     runs-on: ubuntu-latest
+    if: github.repository == 'iOfficeAI/AionUi'
 
     steps:
       - name: Get expected version
