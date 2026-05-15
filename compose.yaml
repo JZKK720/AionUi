@@ -1,0 +1,18 @@
+name: cubecloud-agentos
+
+services:
+  agentos:
+    image: ${CUBECLOUD_AGENTOS_IMAGE:-ghcr.io/jzkk720/cubecloud-agentos}:${CUBECLOUD_AGENTOS_TAG:-latest}
+    pull_policy: always
+    platform: linux/amd64
+    init: true
+    restart: unless-stopped
+    ports:
+      - '${CUBECLOUD_AGENTOS_PORT:-3308}:3000'
+    environment:
+      NODE_ENV: production
+      ALLOW_REMOTE: 'true'
+      PORT: '3000'
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data
