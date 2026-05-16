@@ -19,9 +19,19 @@ OUTPUT_DIR="${2:-release-assets}"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-has_artifact_tree() {
+find_first_metadata_for_path() {
   local artifact_name="$1"
-  find "$ARTIFACTS_DIR" -type f -path "*/${artifact_name}/*" -print -quit | grep -q .
+  local file_name="$2"
+  find "$ARTIFACTS_DIR" -type f -path "*/${artifact_name}/*" -name "$file_name" | sort | head -n 1 || true
+}
+
+find_unique_metadata_by_name() {
+  local file_name="$1"
+  mapfile -t matches < <(find "$ARTIFACTS_DIR" -type f -name "$file_name" | sort)
+
+  if [ "${#matches[@]}" -eq 1 ]; then
+    printf '%s\n' "${matches[0]}"
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -52,12 +62,20 @@ done
 # ---------------------------------------------------------------------------
 echo "==> Collecting updater metadata ..."
 
-WIN_X64_LATEST=$(find "$ARTIFACTS_DIR" -type f -path "*/windows-build-x64/*" -name "latest.yml" | sort | head -n 1 || true)
-WIN_ARM64_LATEST=$(find "$ARTIFACTS_DIR" -type f -path "*/windows-build-arm64/*" -name "latest.yml" | sort | head -n 1 || true)
-MAC_X64_LATEST=$(find "$ARTIFACTS_DIR" -type f -path "*/macos-build-x64/*" -name "latest-mac.yml" | sort | head -n 1 || true)
-MAC_ARM64_LATEST=$(find "$ARTIFACTS_DIR" -type f -path "*/macos-build-arm64/*" -name "latest-mac.yml" | sort | head -n 1 || true)
-LINUX_X64_LATEST=$(find "$ARTIFACTS_DIR" -type f -path "*/linux-build-x64/*" -name "latest-linux.yml" | sort | head -n 1 || true)
-LINUX_ARM64_LATEST=$(find "$ARTIFACTS_DIR" -type f -path "*/linux-build-arm64/*" -name "latest-linux-arm64.yml" | sort | head -n 1 || true)
+WIN_X64_LATEST=$(find_first_metadata_for_path "windows-build-x64" "latest.yml")
+WIN_ARM64_LATEST=$(find_first_metadata_for_path "windows-build-arm64" "latest.yml")
+MAC_X64_LATEST=$(find_first_metadata_for_path "macos-build-x64" "latest-mac.yml")
+MAC_ARM64_LATEST=$(find_first_metadata_for_path "macos-build-arm64" "latest-mac.yml")
+LINUX_X64_LATEST=$(find_first_metadata_for_path "linux-build-x64" "latest-linux.yml")
+LINUX_ARM64_LATEST=$(find_first_metadata_for_path "linux-build-arm64" "latest-linux-arm64.yml")
+
+# Reusable workflows and manual artifact downloads can flatten or rename the
+# extracted artifact directories. Fall back to a unique metadata filename when
+# the expected platform directory is absent but the metadata remains unambiguous.
+[ -z "$WIN_X64_LATEST" ] && WIN_X64_LATEST=$(find_unique_metadata_by_name "latest.yml")
+[ -z "$MAC_X64_LATEST" ] && MAC_X64_LATEST=$(find_unique_metadata_by_name "latest-mac.yml")
+[ -z "$LINUX_X64_LATEST" ] && LINUX_X64_LATEST=$(find_unique_metadata_by_name "latest-linux.yml")
+[ -z "$LINUX_ARM64_LATEST" ] && LINUX_ARM64_LATEST=$(find_unique_metadata_by_name "latest-linux-arm64.yml")
 
 # ---------------------------------------------------------------------------
 # 3) Publish deterministic canonical metadata for electron-updater
@@ -89,14 +107,22 @@ echo "==> Validating required metadata ..."
 MISSING=0
 REQUIRED_METADATA=()
 
-has_artifact_tree "windows-build-x64" && REQUIRED_METADATA+=(latest.yml)
-has_artifact_tree "windows-build-arm64" && REQUIRED_METADATA+=(latest-win-arm64.yml)
-has_artifact_tree "macos-build-x64" && REQUIRED_METADATA+=(latest-mac.yml)
-has_artifact_tree "macos-build-arm64" && REQUIRED_METADATA+=(latest-arm64-mac.yml)
-has_artifact_tree "linux-build-x64" && REQUIRED_METADATA+=(latest-linux.yml)
-has_artifact_tree "linux-build-arm64" && REQUIRED_METADATA+=(latest-linux-arm64.yml)
+[ -n "$WIN_X64_LATEST" ] && REQUIRED_METADATA+=(latest.yml)
+[ -n "$WIN_ARM64_LATEST" ] && REQUIRED_METADATA+=(latest-win-arm64.yml)
+[ -n "$MAC_X64_LATEST" ] && REQUIRED_METADATA+=(latest-mac.yml)
+[ -n "$MAC_ARM64_LATEST" ] && REQUIRED_METADATA+=(latest-arm64-mac.yml)
+[ -n "$LINUX_X64_LATEST" ] && REQUIRED_METADATA+=(latest-linux.yml)
+[ -n "$LINUX_ARM64_LATEST" ] && REQUIRED_METADATA+=(latest-linux-arm64.yml)
 
 if [ "${#REQUIRED_METADATA[@]}" -eq 0 ]; then
+  if [ "${#DISTRIBUTABLES[@]}" -gt 0 ]; then
+    echo "::error::Downloaded artifacts did not include recognizable updater metadata under $ARTIFACTS_DIR"
+    echo "::group::Discovered artifact files"
+    find "$ARTIFACTS_DIR" -maxdepth 4 -type f | sort
+    echo "::endgroup::"
+    exit 1
+  fi
+
   echo "::error::No build artifacts found under $ARTIFACTS_DIR"
   exit 1
 fi
