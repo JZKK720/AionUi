@@ -116,6 +116,7 @@ jobs:
         shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          ORIGINAL_VERSION="$VERSION"
           BRANCH_NAME=${GITHUB_REF#refs/heads/}
           HEAD_SHA=$(git rev-parse HEAD)
 
@@ -158,7 +159,7 @@ jobs:
 
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
-          if [ "$TAG_NAME" != "v$(node -p \"require('./package.json').version\")" ]; then
+          if [ "$TAG_NAME" != "v$ORIGINAL_VERSION" ]; then
             echo "📝 Updating package.json version to $VERSION"
 
             # 更新 package.json 版本号，避免 bun pm version 隐式执行 git commit/tag
