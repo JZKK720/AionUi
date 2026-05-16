@@ -132,8 +132,8 @@ jobs:
 
               echo "📝 Updating package.json version to $NEW_VERSION"
 
-              # 更新 package.json 版本号
-              bun pm version $NEW_VERSION
+              # 更新 package.json 版本号，避免 bun pm version 隐式执行 git commit/tag
+              bun pm pkg set version="$NEW_VERSION"
 
               # 配置git用户信息
               git config user.name "github-actions[bot]"
