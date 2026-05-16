@@ -19,6 +19,11 @@ OUTPUT_DIR="${2:-release-assets}"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
+has_artifact_tree() {
+  local artifact_name="$1"
+  find "$ARTIFACTS_DIR" -type f -path "*/${artifact_name}/*" -print -quit | grep -q .
+}
+
 # ---------------------------------------------------------------------------
 # 1) Copy all distributables (unique file names)
 # ---------------------------------------------------------------------------
@@ -82,7 +87,21 @@ echo "==> Writing architecture-specific updater metadata ..."
 echo "==> Validating required metadata ..."
 
 MISSING=0
-for required in latest.yml latest-mac.yml latest-linux.yml latest-linux-arm64.yml; do
+REQUIRED_METADATA=()
+
+has_artifact_tree "windows-build-x64" && REQUIRED_METADATA+=(latest.yml)
+has_artifact_tree "windows-build-arm64" && REQUIRED_METADATA+=(latest-win-arm64.yml)
+has_artifact_tree "macos-build-x64" && REQUIRED_METADATA+=(latest-mac.yml)
+has_artifact_tree "macos-build-arm64" && REQUIRED_METADATA+=(latest-arm64-mac.yml)
+has_artifact_tree "linux-build-x64" && REQUIRED_METADATA+=(latest-linux.yml)
+has_artifact_tree "linux-build-arm64" && REQUIRED_METADATA+=(latest-linux-arm64.yml)
+
+if [ "${#REQUIRED_METADATA[@]}" -eq 0 ]; then
+  echo "::error::No build artifacts found under $ARTIFACTS_DIR"
+  exit 1
+fi
+
+for required in "${REQUIRED_METADATA[@]}"; do
   if [ ! -f "$OUTPUT_DIR/$required" ]; then
     echo "::error::Missing required updater metadata: $required"
     MISSING=1
