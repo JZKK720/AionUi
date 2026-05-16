@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   initTaskBridge: vi.fn(),
   initStarOfficeBridge: vi.fn(),
   initSpeechToTextBridge: vi.fn(),
+  initRemoteAgentBridge: vi.fn(),
   initHubBridge: vi.fn(),
   initializeRegistry: vi.fn(async () => {}),
   loggerConfig: vi.fn(),
@@ -134,6 +135,9 @@ vi.mock('@process/bridge/starOfficeBridge', () => ({
 vi.mock('@process/bridge/speechToTextBridge', () => ({
   initSpeechToTextBridge: (...args: unknown[]) => mocks.initSpeechToTextBridge(...args),
 }));
+vi.mock('@process/bridge/remoteAgentBridge', () => ({
+  initRemoteAgentBridge: (...args: unknown[]) => mocks.initRemoteAgentBridge(...args),
+}));
 vi.mock('@process/bridge/hubBridge', () => ({
   initHubBridge: (...args: unknown[]) => mocks.initHubBridge(...args),
 }));
@@ -143,11 +147,12 @@ describe('initBridgeStandalone', () => {
     vi.clearAllMocks();
   });
 
-  it('registers the hub bridge and initializes ACP detection', async () => {
+  it('registers the remote agent and hub bridges and initializes ACP detection', async () => {
     const mod = await import('../../../../src/process/utils/initBridgeStandalone');
 
     await mod.initBridgeStandalone();
 
+    expect(mocks.initRemoteAgentBridge).toHaveBeenCalledTimes(1);
     expect(mocks.initHubBridge).toHaveBeenCalledTimes(1);
     expect(mocks.initializeRegistry).toHaveBeenCalledTimes(1);
   });
