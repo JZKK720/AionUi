@@ -14,6 +14,8 @@ services:
     restart: unless-stopped
     ports:
       - '${CUBECLOUD_AGENTOS_PORT:-3308}:3000'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     environment:
       NODE_ENV: production
       ALLOW_REMOTE: 'true'
@@ -21,3 +23,12 @@ services:
       DATA_DIR: /data
     volumes:
       - ./data:/data
+    networks:
+      default:
+        aliases:
+          - agentos
+          - aionui
+
+networks:
+  default:
+    name: ${CUBECLOUD_AGENTOS_NETWORK:-aionui-stack}

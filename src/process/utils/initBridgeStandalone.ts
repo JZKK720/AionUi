@@ -43,6 +43,7 @@ import { initSystemSettingsBridge } from '@process/bridge/systemSettingsBridge';
 import { initTaskBridge } from '@process/bridge/taskBridge';
 import { initSpeechToTextBridge } from '@process/bridge/speechToTextBridge';
 import { initHubBridge } from '@process/bridge/hubBridge';
+import { initRemoteAgentBridge } from '@process/bridge/remoteAgentBridge';
 
 logger.config({ print: true });
 
@@ -79,6 +80,7 @@ export async function initBridgeStandalone(): Promise<void> {
   initTaskBridge(workerTaskManager);
   initStarOfficeBridge();
   initSpeechToTextBridge();
+  initRemoteAgentBridge();
   initHubBridge();
 
   // Initialize ACP detector to scan for installed CLI agents (claude, codex, etc.)

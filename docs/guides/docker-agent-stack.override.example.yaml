@@ -1,0 +1,29 @@
+services:
+  ollama:
+    networks:
+      default:
+        aliases:
+          - ollama
+
+  openclaw-gateway:
+    networks:
+      default:
+        aliases:
+          - openclaw
+
+  hermes-gateway:
+    networks:
+      default:
+        aliases:
+          - hermes-agent
+
+  ironclaw:
+    networks:
+      default:
+        aliases:
+          - ironclaw
+
+networks:
+  default:
+    external: true
+    name: aionui-stack

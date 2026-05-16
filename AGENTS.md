@@ -130,8 +130,9 @@ Detailed rules and guidelines are organized into Skills for better modularity:
 | **pr-verify**     | Verify and merge bot:ready-to-merge PRs with impact analysis and test supplementation | Verifying PRs, merging ready PRs, `/pr-verify`                            |
 | **pr-ship**       | End-to-end PR lifecycle: create, CI wait, review, fix, merge in one invocation        | `/pr-ship`, after development is done, resume shepherding a PR            |
 | **pr-automation** | PR automation orchestrator: poll PRs, review, fix, and merge via label state machine  | Invoked by daemon script (`pr-automation.sh`), `/pr-automation`           |
+| **gateway-dashboard-ops** | Operator workflow for AgentOS/WebUI dashboard, Guid-page model routing, local-model setup, and remote-agent onboarding | `localhost:3308`, `/guid`, WebUI or gateway operations, Ollama/LM Studio local models, selected model not responding, OpenClaw/Hermes/IronClaw remote-agent questions |
 
-> Skills are located in `.claude/skills/` and contain project conventions that apply to **all** agents and contributors. Every agent working in this repository must read and follow the relevant skill files when the task matches their scope.
+> Skills are located in `.claude/skills/` and `.github/skills/`. `.claude/skills/` cover contributor workflows and project conventions; `.github/skills/` can capture focused repo operator workflows. Every agent working in this repository must read and follow the relevant skill files when the task matches their scope.
 
 ## PR 自动化流程
 
