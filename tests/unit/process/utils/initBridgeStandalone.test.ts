@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => ({
   initSpeechToTextBridge: vi.fn(),
   initRemoteAgentBridge: vi.fn(),
   initHubBridge: vi.fn(),
-  initializeRegistry: vi.fn(async () => {}),
+  initializeDetectedAgents: vi.fn(async () => {}),
   loggerConfig: vi.fn(),
 }));
 
@@ -38,10 +38,8 @@ vi.mock('@office-ai/platform', () => ({
   },
 }));
 
-vi.mock('@process/agent/AgentRegistry', () => ({
-  agentRegistry: {
-    initialize: (...args: unknown[]) => mocks.initializeRegistry(...args),
-  },
+vi.mock('@process/agent/initializeDetectedAgents', () => ({
+  initializeDetectedAgents: (...args: unknown[]) => mocks.initializeDetectedAgents(...args),
 }));
 
 vi.mock('@process/services/database/SqliteChannelRepository', () => ({
@@ -154,6 +152,6 @@ describe('initBridgeStandalone', () => {
 
     expect(mocks.initRemoteAgentBridge).toHaveBeenCalledTimes(1);
     expect(mocks.initHubBridge).toHaveBeenCalledTimes(1);
-    expect(mocks.initializeRegistry).toHaveBeenCalledTimes(1);
+    expect(mocks.initializeDetectedAgents).toHaveBeenCalledTimes(1);
   });
 });
