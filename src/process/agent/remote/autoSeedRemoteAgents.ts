@@ -14,6 +14,7 @@ import type { RemoteAgentConfig, RemoteAgentInput, RemoteAgentProtocol } from '.
 export type AutoSeedRemoteAgentsResult = {
   configuredCount: number;
   createdIds: string[];
+  updatedIds: string[];
   skippedCount: number;
   handshakeResults: Record<string, RemoteAgentHandshakeResult>;
 };
@@ -27,7 +28,7 @@ function logAutoSeedSummary(result: AutoSeedRemoteAgentsResult): void {
     .join(', ');
 
   console.info(
-    `[RemoteAgentSeed] Startup seeding complete: configured=${result.configuredCount} created=${result.createdIds.length} skipped=${result.skippedCount} handshakes=${handshakeSummary || 'none'}`
+    `[RemoteAgentSeed] Startup seeding complete: configured=${result.configuredCount} created=${result.createdIds.length} updated=${result.updatedIds.length} skipped=${result.skippedCount} handshakes=${handshakeSummary || 'none'}`
   );
 }
 
@@ -40,11 +41,63 @@ function getExistingSeedKeys(agents: RemoteAgentConfig[]): Set<string> {
   return new Set(agents.map((agent) => buildSeedKey(agent.protocol, agent.url)));
 }
 
+function getExistingAgentsBySeedKey(agents: RemoteAgentConfig[]): Map<string, RemoteAgentConfig> {
+  return new Map(agents.map((agent) => [buildSeedKey(agent.protocol, agent.url), agent]));
+}
+
+function buildSeedUpdates(
+  existingAgent: RemoteAgentConfig,
+  seed: RemoteAgentInput
+): Partial<{
+  name: string;
+  auth_type: string;
+  auth_token: string;
+  allow_insecure: number;
+  avatar: string;
+  description: string;
+}> {
+  const updates: Partial<{
+    name: string;
+    auth_type: string;
+    auth_token: string;
+    allow_insecure: number;
+    avatar: string;
+    description: string;
+  }> = {};
+
+  if (existingAgent.name !== seed.name) {
+    updates.name = seed.name;
+  }
+
+  if (existingAgent.authType !== seed.authType) {
+    updates.auth_type = seed.authType;
+  }
+
+  if (seed.authToken && existingAgent.authToken !== seed.authToken) {
+    updates.auth_token = seed.authToken;
+  }
+
+  if (typeof seed.allowInsecure === 'boolean' && existingAgent.allowInsecure !== seed.allowInsecure) {
+    updates.allow_insecure = seed.allowInsecure ? 1 : 0;
+  }
+
+  if (seed.avatar && existingAgent.avatar !== seed.avatar) {
+    updates.avatar = seed.avatar;
+  }
+
+  if (seed.description && existingAgent.description !== seed.description) {
+    updates.description = seed.description;
+  }
+
+  return updates;
+}
+
 export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env): Promise<AutoSeedRemoteAgentsResult> {
   const seeds = parseRemoteAgentSeedsFromEnv(env);
   const result: AutoSeedRemoteAgentsResult = {
     configuredCount: seeds.length,
     createdIds: [],
+    updatedIds: [],
     skippedCount: 0,
     handshakeResults: {},
   };
@@ -54,12 +107,37 @@ export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env)
   }
 
   const db = await getDatabase();
-  const existingKeys = getExistingSeedKeys(db.getRemoteAgents());
+  const existingAgents = db.getRemoteAgents();
+  const existingKeys = getExistingSeedKeys(existingAgents);
+  const existingAgentsByKey = getExistingAgentsBySeedKey(existingAgents);
+  const processedSeedKeys = new Set<string>();
 
   for (const seed of seeds) {
     const seedKey = buildSeedKey(seed.protocol, seed.url);
-    if (existingKeys.has(seedKey)) {
+    if (processedSeedKeys.has(seedKey)) {
       result.skippedCount += 1;
+      continue;
+    }
+    processedSeedKeys.add(seedKey);
+
+    const existingAgent = existingAgentsByKey.get(seedKey);
+    if (existingAgent) {
+      const updates = buildSeedUpdates(existingAgent, seed);
+      if (Object.keys(updates).length === 0) {
+        result.skippedCount += 1;
+        continue;
+      }
+
+      const updateResult = db.updateRemoteAgent(existingAgent.id, updates);
+      if (!updateResult.success) {
+        console.warn(
+          `[RemoteAgentSeed] Failed to update seed "${seed.name}" (${seed.url}): ${updateResult.error ?? 'unknown error'}`
+        );
+        result.skippedCount += 1;
+        continue;
+      }
+
+      result.updatedIds.push(existingAgent.id);
       continue;
     }
 
@@ -77,7 +155,7 @@ export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env)
     result.createdIds.push(config.id);
   }
 
-  for (const agentId of result.createdIds) {
+  for (const agentId of [...result.createdIds, ...result.updatedIds]) {
     result.handshakeResults[agentId] = await handshakeRemoteAgent(db, agentId);
   }
 

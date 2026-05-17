@@ -54,6 +54,7 @@ describe('autoSeedRemoteAgents', () => {
     await expect(autoSeedRemoteAgents({})).resolves.toEqual({
       configuredCount: 0,
       createdIds: [],
+      updatedIds: [],
       skippedCount: 0,
       handshakeResults: {},
     });
@@ -77,9 +78,52 @@ describe('autoSeedRemoteAgents', () => {
     expect(result).toEqual({
       configuredCount: 1,
       createdIds: ['seed-openclaw'],
+      updatedIds: [],
       skippedCount: 0,
       handshakeResults: {
         'seed-openclaw': { status: 'ok' },
+      },
+    });
+  });
+
+  it('updates existing remote agents when seeded auth settings change and handshakes them again', async () => {
+    mockDb.getRemoteAgents.mockReturnValue([
+      {
+        id: 'existing-1',
+        name: 'OpenClaw Gateway',
+        protocol: 'openclaw',
+        url: 'ws://openclaw:18789/',
+        authType: 'none',
+        createdAt: 0,
+        updatedAt: 0,
+      },
+    ]);
+
+    const result = await autoSeedRemoteAgents({
+      AIONUI_REMOTE_AGENT_SEEDS: JSON.stringify([
+        {
+          name: 'OpenClaw Gateway',
+          url: 'openclaw:18789',
+          authToken: 'shared-token',
+          description: 'Verified shared-network OpenClaw gateway',
+        },
+      ]),
+    });
+
+    expect(mockDb.createRemoteAgent).not.toHaveBeenCalled();
+    expect(mockDb.updateRemoteAgent).toHaveBeenCalledWith('existing-1', {
+      auth_type: 'bearer',
+      auth_token: 'shared-token',
+      description: 'Verified shared-network OpenClaw gateway',
+    });
+    expect(mockHandshakeRemoteAgent).toHaveBeenCalledWith(mockDb, 'existing-1');
+    expect(result).toEqual({
+      configuredCount: 1,
+      createdIds: [],
+      updatedIds: ['existing-1'],
+      skippedCount: 0,
+      handshakeResults: {
+        'existing-1': { status: 'ok' },
       },
     });
   });
@@ -88,7 +132,7 @@ describe('autoSeedRemoteAgents', () => {
     mockDb.getRemoteAgents.mockReturnValue([
       {
         id: 'existing-1',
-        name: 'Existing OpenClaw',
+        name: 'OpenClaw',
         protocol: 'openclaw',
         url: 'openclaw:18789',
         authType: 'none',
@@ -106,6 +150,7 @@ describe('autoSeedRemoteAgents', () => {
     expect(result).toEqual({
       configuredCount: 1,
       createdIds: [],
+      updatedIds: [],
       skippedCount: 1,
       handshakeResults: {},
     });
@@ -136,6 +181,7 @@ describe('autoSeedRemoteAgents', () => {
     expect(result).toEqual({
       configuredCount: 1,
       createdIds: [],
+      updatedIds: [],
       skippedCount: 1,
       handshakeResults: {},
     });
@@ -149,7 +195,7 @@ describe('autoSeedRemoteAgents', () => {
     });
 
     expect(infoSpy).toHaveBeenCalledWith(
-      '[RemoteAgentSeed] Startup seeding complete: configured=1 created=1 skipped=0 handshakes=seed-openclaw=pending_approval'
+      '[RemoteAgentSeed] Startup seeding complete: configured=1 created=1 updated=0 skipped=0 handshakes=seed-openclaw=pending_approval'
     );
   });
 });
