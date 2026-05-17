@@ -6,9 +6,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-type ConnectionBehavior =
-  | { status: 'hello' }
-  | { status: 'connect-error'; message: string; code?: string };
+type ConnectionBehavior = { status: 'hello' } | { status: 'connect-error'; message: string; code?: string };
 
 const mockProbeBehaviors = vi.hoisted(() => new Map<string, ConnectionBehavior>());
 const mockSyncRemoteAgentSeeds = vi.hoisted(() =>
