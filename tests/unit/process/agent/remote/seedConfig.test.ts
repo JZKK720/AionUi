@@ -5,7 +5,10 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { parseRemoteAgentSeedsFromEnv, REMOTE_AGENT_SEEDS_ENV } from '../../../../../src/process/agent/remote/seedConfig';
+import {
+  parseRemoteAgentSeedsFromEnv,
+  REMOTE_AGENT_SEEDS_ENV,
+} from '../../../../../src/process/agent/remote/seedConfig';
 
 describe('parseRemoteAgentSeedsFromEnv', () => {
   const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});

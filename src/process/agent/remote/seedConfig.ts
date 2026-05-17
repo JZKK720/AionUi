@@ -73,7 +73,8 @@ function parseSeed(seed: unknown, index: number): RemoteAgentInput | null {
   }
 
   const authToken = normalizeOptionalString(rawSeed.authToken) ?? normalizeOptionalString(rawSeed.token);
-  const authType = (normalizeOptionalString(rawSeed.authType) ?? (authToken ? 'bearer' : 'none')) as RemoteAgentAuthType;
+  const authType = (normalizeOptionalString(rawSeed.authType) ??
+    (authToken ? 'bearer' : 'none')) as RemoteAgentAuthType;
 
   if (!SUPPORTED_AUTH_TYPES.has(authType)) {
     console.warn(`[RemoteAgentSeed] Ignoring entry ${index}: unsupported auth type "${authType}".`);

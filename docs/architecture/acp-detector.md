@@ -197,9 +197,9 @@ which <command>
 
 ## 初始化入口
 
-| 启动模式   | 入口文件                                    | 调用方式                              |
-| ---------- | ------------------------------------------- | ------------------------------------- |
-| Electron   | `src/index.ts`                              | `initializeAcpDetector()` (异步并行)  |
+| 启动模式   | 入口文件                                    | 调用方式                                |
+| ---------- | ------------------------------------------- | --------------------------------------- |
+| Electron   | `src/index.ts`                              | `initializeAcpDetector()` (异步并行)    |
 | Standalone | `src/process/utils/initBridgeStandalone.ts` | `initializeDetectedAgents()` (直接调用) |
 
 启动时会先解析 `AIONUI_REMOTE_AGENT_SEEDS`。其中每个有效 seed 会在数据库中按 `(protocol, url)` 做幂等创建，然后对新建的 OpenClaw remote agent 复用现有握手流程，最后再执行 `agentRegistry.initialize()`，这样桌面模式和 standalone WebUI 都能在首屏前看到自动注入的远程 agents。
