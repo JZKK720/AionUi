@@ -7,13 +7,13 @@
 /**
  * OpenClaw Gateway Protocol Types
  *
- * Based on OpenClaw Gateway WebSocket protocol v3.
+ * Based on OpenClaw Gateway WebSocket protocol v4.
  * Reference: https://github.com/openclaw/openclaw/tree/main/src/gateway/protocol
  */
 
 // ========== Protocol Version ==========
 
-export const OPENCLAW_PROTOCOL_VERSION = 3 as const;
+export const OPENCLAW_PROTOCOL_VERSION = 4 as const;
 
 // ========== Base Frame Types ==========
 

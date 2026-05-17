@@ -48,7 +48,7 @@
 第一期仅支持 **OpenClaw Gateway Protocol**（WebSocket），后续可扩展其他协议。
 
 - **传输层**：WebSocket（`ws(s)://`）
-- **消息格式**：OpenClaw Gateway Protocol v3（`connect.challenge` → `connect` → `hello-ok`，然后 `chat.send` / `sessions.*` 等 RPC 方法）
+- **消息格式**：OpenClaw Gateway Protocol v4（`connect.challenge` → `connect` → `hello-ok`，然后 `chat.send` / `sessions.*` 等 RPC 方法）
 - **认证方式**：
   - `auth.token`：Bearer Token（从 `remote_agents.auth_token` 读取）
   - `device`：Ed25519 设备身份签名（每个远程 Agent 独立生成密钥对，存 DB）
@@ -193,7 +193,7 @@ IChatConversation<
 > 以下问题已在调研和设计阶段确认，详见 [调研报告](./research.md) 和 [实现方案](./design.md)。
 
 1. **文件操作策略**：远程 Agent 请求 `fs/read_text_file` / `fs/write_text_file` 时，**逐次确认**。复用现有 `addConfirmation` / `confirm` 机制（`BaseAgentManager` 已有），远程 Agent 的工具调用权限请求走与本地相同的审批流程。Phase 3 可加白名单机制。
-2. **协议版本**：**第一期不需要协商**。OpenClaw Gateway 的 `HelloOk` 响应已包含 `protocol` 版本信息（当前 v3），`RemoteAgentCore` 可从中读取但无需协商。Phase 2 引入 `IProtocolAdapter` 时再考虑版本协商。
+2. **协议版本**：**第一期不需要协商**。OpenClaw Gateway 的 `HelloOk` 响应已包含 `protocol` 版本信息（当前 v4），`RemoteAgentCore` 可从中读取但无需协商。Phase 2 引入 `IProtocolAdapter` 时再考虑版本协商。
 3. **重连策略**：**复用现有策略**。`OpenClawGatewayConnection` 已内置指数退避重连（最多 10 次，间隔递增），`RemoteAgentCore` 直接使用该传输层，无需额外实现。
 4. **超时配置**：**第一期全局默认值**（连接 30s，请求 60s），不开放用户配置。Phase 3 可开放为 `remote_agents` 表的可选字段。
 5. **多协议支持**：**第一期仅 OpenClaw Gateway Protocol（WebSocket）**。Phase 2 引入 `IProtocolAdapter` 时可扩展 ZeroClaw 等其他协议。
