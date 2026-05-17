@@ -19,6 +19,10 @@ export type AutoSeedRemoteAgentsResult = {
   handshakeResults: Record<string, RemoteAgentHandshakeResult>;
 };
 
+export type SyncRemoteAgentSeedsOptions = {
+  reconcileExisting?: boolean;
+};
+
 function logAutoSeedSummary(result: AutoSeedRemoteAgentsResult): void {
   const handshakeSummary = Object.entries(result.handshakeResults)
     .map(([agentId, handshakeResult]) => {
@@ -92,8 +96,11 @@ function buildSeedUpdates(
   return updates;
 }
 
-export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env): Promise<AutoSeedRemoteAgentsResult> {
-  const seeds = parseRemoteAgentSeedsFromEnv(env);
+export async function syncRemoteAgentSeeds(
+  seeds: RemoteAgentInput[],
+  options: SyncRemoteAgentSeedsOptions = {}
+): Promise<AutoSeedRemoteAgentsResult> {
+  const { reconcileExisting = true } = options;
   const result: AutoSeedRemoteAgentsResult = {
     configuredCount: seeds.length,
     createdIds: [],
@@ -122,6 +129,11 @@ export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env)
 
     const existingAgent = existingAgentsByKey.get(seedKey);
     if (existingAgent) {
+      if (!reconcileExisting) {
+        result.skippedCount += 1;
+        continue;
+      }
+
       const updates = buildSeedUpdates(existingAgent, seed);
       if (Object.keys(updates).length === 0) {
         result.skippedCount += 1;
@@ -157,6 +169,17 @@ export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env)
 
   for (const agentId of [...result.createdIds, ...result.updatedIds]) {
     result.handshakeResults[agentId] = await handshakeRemoteAgent(db, agentId);
+  }
+
+  return result;
+}
+
+export async function autoSeedRemoteAgents(env: NodeJS.ProcessEnv = process.env): Promise<AutoSeedRemoteAgentsResult> {
+  const seeds = parseRemoteAgentSeedsFromEnv(env);
+  const result = await syncRemoteAgentSeeds(seeds);
+
+  if (seeds.length === 0) {
+    return result;
   }
 
   logAutoSeedSummary(result);

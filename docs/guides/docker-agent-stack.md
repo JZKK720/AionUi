@@ -40,7 +40,9 @@ Notes:
 
 ### Remote Agent Gateway URLs
 
-Use these under **Settings -> Agent Settings -> Remote Agents**.
+At startup, AionUi now probes these known sibling-service aliases and host fallbacks and auto-adds any gateway that answers the OpenClaw handshake.
+
+Use these same URLs under **Settings -> Agent Settings -> Remote Agents** when you need to add a gateway manually or repair auth.
 
 Verified OpenClaw service-name URL on the shared Docker network:
 
@@ -80,7 +82,7 @@ Do not use these UI ports in AionUi Remote Agents:
 
 ## Important Compatibility Rule
 
-AionUi's Remote Agents implementation is currently built around the OpenClaw gateway transport. OpenClaw should work directly. Hermes Agent and IronClaw will only work through **Remote Agents** if those gateway ports speak the same compatible WebSocket gateway protocol.
+AionUi's Remote Agents implementation is currently built around the OpenClaw gateway transport. OpenClaw should work directly and is the only sibling gateway verified end to end in this stack. Hermes Agent and IronClaw will only auto-detect or work through **Remote Agents** if those gateway ports speak the same compatible WebSocket gateway protocol.
 
 If Hermes or IronClaw only expose their own UI or terminal surface, keep using them through their native UI or local ACP integration instead of AionUi Remote Agents.
 
@@ -157,13 +159,13 @@ If Ollama is not containerized on the shared network, use `http://host.docker.in
 
 ### OpenClaw
 
-1. Open **Settings -> Agent Settings -> Remote Agents**
-2. Add a remote agent using `ws://openclaw:18789` on the shared network, or `ws://host.docker.internal:18788` as host fallback
-3. Use **Test Connection** for reachability only
-4. Use **Save** to perform the full handshake and pairing flow
+1. Start AionUi and wait for startup discovery to probe `openclaw` and the host fallback
+2. Open **Settings -> Agent Settings -> Remote Agents** and confirm the auto-detected OpenClaw entry is present
+3. If the gateway requires auth, update that entry with the shared token and save it to complete the pairing flow
+4. If discovery did not find the gateway, add it manually with `ws://openclaw:18789` on the shared network or `ws://host.docker.internal:18788` as host fallback
 
 ### Hermes Agent and IronClaw
 
-1. Verify the gateway port is a compatible OpenClaw-style gateway, not just a web UI or terminal UI
-2. In the current live stack, only OpenClaw has been verified end-to-end as a working remote-agent gateway
-3. Keep Hermes Agent and IronClaw out of **Remote Agents** until their protocol compatibility is confirmed
+1. AionUi probes the documented Hermes and IronClaw candidate gateway URLs automatically at startup
+2. Only endpoints that answer the OpenClaw handshake are auto-added; plain web UIs and terminal ports are ignored
+3. In the current live stack, only OpenClaw has been verified end to end as a working remote-agent gateway
